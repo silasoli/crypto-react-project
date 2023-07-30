@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import styles from "./detail.module.css";
-
 interface CoinProps {
   delta_24h: string;
   market_cap: string;
@@ -15,10 +14,12 @@ interface CoinProps {
   formatedMarket: string;
   formatedLowPrice: string;
   formatedHighPrice: string;
+  numberDelta: number;
   error?: string;
 }
 
 export function Detail() {
+  const API_KEY = import.meta.env.VITE_API_KEY;
   const { crypto } = useParams();
   const [detail, setDetail] = useState<CoinProps>();
   const [loading, setLoading] = useState(true);
@@ -28,11 +29,10 @@ export function Detail() {
   useEffect(() => {
     function getData() {
       fetch(
-        `https://sujeitoprogramador.com/api-cripto/coin/?key=c6e05aaab76bc3b0&pref=BRL&symbol=${crypto}`
+        `https://sujeitoprogramador.com/api-cripto/coin/?key=${API_KEY}&pref=BRL&symbol=${crypto}`
       )
         .then((response) => response.json())
         .then((data: CoinProps) => {
-
           const price = Intl.NumberFormat("pt-BR", {
             style: "currency",
             currency: "BRL",
@@ -44,9 +44,9 @@ export function Detail() {
             formatedMarket: price.format(Number(data.market_cap)),
             formatedLowPrice: price.format(Number(data.low_24h)),
             formatedHighPrice: price.format(Number(data.high_24h)),
+            numberDelta: parseFloat(data.delta_24h.replace(",", ".")) || 0,
           };
 
-          console.log(resultData);
           setDetail(resultData);
           setLoading(false);
         })
@@ -85,7 +85,9 @@ export function Detail() {
           <strong>Delta 24h:</strong>
           <span
             className={
-              Number(detail?.delta_24h) >= 0 ? styles.profit : styles.loss
+              detail?.numberDelta && detail.numberDelta >= 0
+                ? styles.profit
+                : styles.loss
             }
           >
             {detail?.delta_24h}

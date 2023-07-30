@@ -13,6 +13,7 @@ interface CoinProps {
   volume_24h: string;
   formatedPrice: string;
   formatedMarket: string;
+  numberDelta: number;
 }
 
 interface DataProps {
@@ -20,6 +21,7 @@ interface DataProps {
 }
 
 export function Home() {
+  const API_KEY = import.meta.env.VITE_API_KEY;
   const [coins, setCoins] = useState<CoinProps[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
   const navigate = useNavigate();
@@ -27,7 +29,7 @@ export function Home() {
   useEffect(() => {
     function getData() {
       fetch(
-        "https://sujeitoprogramador.com/api-cripto/?key=c6e05aaab76bc3b0&pref=BRL"
+        `https://sujeitoprogramador.com/api-cripto/?key=${API_KEY}&pref=BRL`
       )
         .then((response) => response.json())
         .then((data: DataProps) => {
@@ -43,16 +45,17 @@ export function Home() {
               ...item,
               formatedPrice: price.format(Number(item.price)),
               formatedMarket: price.format(Number(item.market_cap)),
+              numberDelta: parseFloat(item.delta_24h.replace(",", ".")),
             };
 
             return formated;
           });
 
           setCoins(formatResult);
+        })
+       .catch(() => {
+          navigate("/notfound");
         });
-      // .catch((err) => {
-      //   console.log(err)
-      // })
     }
 
     getData();
@@ -60,10 +63,9 @@ export function Home() {
 
   function handleSearch(e: FormEvent) {
     e.preventDefault();
-    if(inputValue === "") return;
-  
-    return navigate(`/detail/${inputValue}`);
+    if (inputValue === "") return;
 
+    return navigate(`/detail/${inputValue}`);
   }
 
   return (
@@ -73,7 +75,7 @@ export function Home() {
           type="text"
           placeholder="Digite o simbolo da moeda:"
           value={inputValue}
-          onChange={ (e) => setInputValue(e.target.value) }        
+          onChange={(e) => setInputValue(e.target.value)}
         />
         <button type="submit">
           <BiSearch size={30} color="#fff" />
@@ -104,7 +106,7 @@ export function Home() {
               </td>
               <td
                 className={
-                  Number(coin?.delta_24h) >= 0 ? styles.tdProfit : styles.tdLoss
+                  coin.numberDelta >= 0 ? styles.tdProfit : styles.tdLoss
                 }
                 data-label="Volume"
               >
